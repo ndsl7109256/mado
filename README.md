@@ -70,6 +70,8 @@ and the [SDL2 library](https://www.libsdl.org/).
 * macOS: `brew install sdl2 jpeg libpng`
 * Ubuntu Linux / Debian: `sudo apt install libsdl2-dev libjpeg-dev libpng-dev`
 
+For those who want to run demo program with VNC as the backend, it is necessary to install the [aml](https://github.com/any1/aml) and [neatvnc](https://github.com/any1/neatvnc) libraries. Please note that using package managers like apt might install outdated versions of these libraries. To ensure you have the latest versions, we recommend cloning the source code from their respective GitHub repositories and building them with the guide from their README.
+
 ### Configuration
 
 Configure via [Kconfiglib](https://pypi.org/project/kconfiglib/), you should select either SDL
@@ -107,6 +109,14 @@ $ sudo usermod -a -G video $USERNAME
 ```
 
 In addition, the framebuffer device can be assigned via the environment variable `FRAMEBUFFER`.
+
+To run demo program with the neat-vnc backend:
+
+```shell
+$./demo-vnc
+```
+
+It would launch the vnc server. You could use any VNC client to connect with given IP address(default is "127.0.0.1") and port (default is 5900).
 
 ## License
 
