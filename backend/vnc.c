@@ -3,7 +3,6 @@ Twin - A Tiny Window System
 Copyright (c) 2024 National Cheng Kung University, Taiwan
 All rights reserved.
 */
-
 #include <aml.h>
 #include <assert.h>
 #include <neatvnc.h>
@@ -36,6 +35,12 @@ typedef struct {
     int width;
     int height;
 } twin_vnc_t;
+
+typedef struct {
+    twin_vnc_t *tx;
+    uint16_t px, py;
+    uint16_t hi;
+} twin_peer_t;
 
 struct fb_side_data {
 	struct pixman_region16 damage;
@@ -160,9 +165,10 @@ static void vnc_key_event(struct nvnc_client *client,
 static void vnc_new_client(struct nvnc_client *client)
 {
     struct nvnc *server = nvnc_client_get_server(client);
-    twin_vnc_t *tx = nvnc_get_userdata(server);
+    twin_peer_t *peer = malloc(sizeof(twin_peer_t));
+    peer->hi = 87;
 
-    nvnc_set_userdata(client, tx, NULL);
+    nvnc_set_userdata(client, peer, NULL);
 }
 
 static bool twin_vnc_read_events(int fd, twin_file_op_t op, void *closure)
@@ -170,9 +176,47 @@ static bool twin_vnc_read_events(int fd, twin_file_op_t op, void *closure)
     (void)fd;
     (void)op;
     twin_vnc_t *tx = closure;
-    //aml_dispatch(tx->aml);
+    aml_dispatch(tx->aml);
     return true;
 }
+
+static px = 0, py = 0;
+static last_buttons = 0;
+static void on_pointer_event(struct nvnc_client* client, uint16_t x, uint16_t y,
+        enum nvnc_button_mask buttons)
+{
+    twin_event_t tev;
+    if ((buttons & NVNC_BUTTON_LEFT) && !(last_buttons & NVNC_BUTTON_LEFT)) {
+        tev.u.pointer.screen_x = x;
+        tev.u.pointer.screen_y = y;
+        tev.kind = TwinEventButtonDown;
+        tev.u.pointer.button = 1;
+        printf("bottondown %d %d\n", x, y);
+    }
+    else if (!(buttons & NVNC_BUTTON_LEFT) && (last_buttons & NVNC_BUTTON_LEFT)) {
+        tev.u.pointer.screen_x = x;
+        tev.u.pointer.screen_y = y;
+        tev.kind = TwinEventButtonUp;
+        tev.u.pointer.button = 1;
+        printf("bottonup %d %d\n", x, y);
+    }
+    if( (px != x || py != y)){
+        px = x;
+        py = y;
+        tev.u.pointer.screen_x = x;
+        tev.u.pointer.screen_y = y;
+        tev.u.pointer.button = 0;
+        tev.kind = TwinEventMotion;
+        printf("motion %d %d\n", x, y);
+    }
+    last_buttons = buttons;
+    //twin_vnc_t *server = nvnc_client_get_server(client);
+    struct nvnc *server = nvnc_client_get_server(client);
+    twin_peer_t *peer = nvnc_get_userdata(client);
+    twin_vnc_t *tx = nvnc_get_userdata(server);
+    twin_screen_dispatch(tx->screen, &tev);
+}
+
 
 twin_context_t *twin_vnc_init(int width, int height)
 {
@@ -207,9 +251,10 @@ twin_context_t *twin_vnc_init(int width, int height)
         goto bail_display;
 
     nvnc_add_display(tx->server, tx->display);
+    nvnc_set_pointer_fn(tx->server, on_pointer_event);
     nvnc_set_name(tx->server, "Twin VNC Backend");
     nvnc_set_new_client_fn(tx->server, vnc_new_client);
-    nvnc_set_pointer_fn(tx->server, vnc_pointer_event);
+    //nvnc_set_pointer_fn(tx->server, vnc_pointer_event);
     nvnc_set_key_fn(tx->server, vnc_key_event);
     nvnc_set_userdata(tx->server, tx, NULL);
 
@@ -235,10 +280,11 @@ twin_context_t *twin_vnc_init(int width, int height)
                             width, height);
 
     int aml_fd = aml_get_fd(tx->aml);
-    //tx->aml_handler = aml_handler_new(aml_get_fd(tx->aml), twin_vnc_work, ctx, NULL);
+    tx->aml_handler = aml_handler_new(aml_get_fd(tx->aml), twin_vnc_work, ctx, NULL);
     twin_set_file(twin_vnc_read_events, aml_fd, TWIN_READ, tx);
 
     twin_set_work(twin_vnc_work, TWIN_WORK_REDISPLAY, ctx);
+    tx->screen = ctx->screen;
 
     return ctx;
 
