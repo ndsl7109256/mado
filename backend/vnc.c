@@ -39,9 +39,8 @@ typedef struct {
 } twin_vnc_t;
 
 typedef struct {
-    twin_vnc_t *tx;
     uint16_t px, py;
-    uint16_t hi;
+    enum nvnc_button_mask prev_button;
 } twin_peer_t;
 
 struct fb_side_data {
@@ -87,10 +86,9 @@ static void twin_vnc_get_screen_size(twin_vnc_t *tx, int *width, int *height)
     *height = nvnc_fb_get_height(tx->current_fb);
 }
 
-static bool twin_vnc_work(void *closure)
+static bool _twin_vnc_work(void *closure)
 {
     twin_screen_t *screen = SCREEN(closure);
-    twin_vnc_t *tx = PRIV(closure);
 
     if (twin_screen_damaged(screen))
         twin_screen_update(screen);
@@ -99,50 +97,43 @@ static bool twin_vnc_work(void *closure)
 
 static void _twin_vnc_new_client(struct nvnc_client *client)
 {
-    struct nvnc *server = nvnc_client_get_server(client);
     twin_peer_t *peer = malloc(sizeof(twin_peer_t));
-
     nvnc_set_userdata(client, peer, NULL);
 }
 
-static bool twin_vnc_read_events(int fd, twin_file_op_t op, void *closure)
+static bool _twin_vnc_read_events(int fd, twin_file_op_t op, void *closure)
 {
-    (void) fd;
-    (void) op;
-    twin_vnc_t *tx = closure;
-    // aml_dispatch(tx->aml);
     return true;
 }
 
-static px = 0, py = 0;
-static last_buttons = 0;
 static void _twin_vnc_pointer_event(struct nvnc_client *client,
                                     uint16_t x,
                                     uint16_t y,
-                                    enum nvnc_button_mask buttons)
+                                    enum nvnc_button_mask button)
 {
+    twin_peer_t *peer = nvnc_get_userdata(client);
     twin_event_t tev;
-    if ((buttons & NVNC_BUTTON_LEFT) && !(last_buttons & NVNC_BUTTON_LEFT)) {
+    if ((button & NVNC_BUTTON_LEFT) && !(peer->prev_button & NVNC_BUTTON_LEFT)) {
         tev.u.pointer.screen_x = x;
         tev.u.pointer.screen_y = y;
         tev.kind = TwinEventButtonDown;
         tev.u.pointer.button = 1;
-    } else if (!(buttons & NVNC_BUTTON_LEFT) &&
-               (last_buttons & NVNC_BUTTON_LEFT)) {
+    } else if (!(button & NVNC_BUTTON_LEFT) &&
+               (peer->prev_button & NVNC_BUTTON_LEFT)) {
         tev.u.pointer.screen_x = x;
         tev.u.pointer.screen_y = y;
         tev.kind = TwinEventButtonUp;
         tev.u.pointer.button = 1;
     }
-    if ((px != x || py != y)) {
-        px = x;
-        py = y;
+    if ((peer->px != x || peer->py != y)) {
+        peer->px = x;
+        peer->py = y;
         tev.u.pointer.screen_x = x;
         tev.u.pointer.screen_y = y;
         tev.u.pointer.button = 0;
         tev.kind = TwinEventMotion;
     }
-    last_buttons = buttons;
+    peer->prev_button = button;
     struct nvnc *server = nvnc_client_get_server(client);
     twin_vnc_t *tx = nvnc_get_userdata(server);
     twin_screen_dispatch(tx->screen, &tev);
@@ -200,10 +191,10 @@ twin_context_t *twin_vnc_init(int width, int height)
 
     int aml_fd = aml_get_fd(tx->aml);
     tx->aml_handler =
-        aml_handler_new(aml_get_fd(tx->aml), twin_vnc_work, ctx, NULL);
-    twin_set_file(twin_vnc_read_events, aml_fd, TWIN_READ, tx);
+        aml_handler_new(aml_get_fd(tx->aml), _twin_vnc_work, ctx, NULL);
+    twin_set_file(_twin_vnc_read_events, aml_fd, TWIN_READ, tx);
 
-    twin_set_work(twin_vnc_work, TWIN_WORK_REDISPLAY, ctx);
+    twin_set_work(_twin_vnc_work, TWIN_WORK_REDISPLAY, ctx);
     tx->screen = ctx->screen;
 
     return ctx;
