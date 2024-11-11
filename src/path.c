@@ -236,6 +236,13 @@ void twin_path_arc(twin_path_t *path,
     twin_path_set_matrix(path, save);
 }
 
+void twin_path_cubic(){
+
+}
+
+void twin_path_quad(){
+}
+
 void twin_path_rectangle(twin_path_t *path,
                          twin_fixed_t x,
                          twin_fixed_t y,

@@ -21,6 +21,10 @@
 #define CONFIG_LOADER_GIF 0
 #endif
 
+#if !defined(CONFIG_LOADER_TVG)
+#define CONFIG_LOADER_TVG 0
+#endif
+
 /* Feature test macro */
 #define LOADER_HAS(x) CONFIG_LOADER_##x
 
@@ -34,6 +38,9 @@
     )                           \
     IIF(LOADER_HAS(GIF))(       \
         _(gif)                  \
+    )							\
+    IIF(LOADER_HAS(TVG))(       \
+        _(tvg)                  \
     )
 /* clang-format on */
 
@@ -60,6 +67,7 @@ static const uint8_t header_png[8] = {
 };
 static const uint8_t header_jpeg[3] = {0xFF, 0xD8, 0xFF};
 static const uint8_t header_gif[4] = {0x47, 0x49, 0x46, 0x38};
+static const uint8_t header_tvg[2] = {0x72, 0x56};
 
 static twin_image_format_t image_type_detect(const char *path)
 {
@@ -91,7 +99,11 @@ static twin_image_format_t image_type_detect(const char *path)
         type = IMAGE_TYPE_gif;
     }
 #endif
-
+#if LOADER_HAS(TVG)
+    else if (!memcmp(header, header_tvg, sizeof(header_tvg))) {
+        type = IMAGE_TYPE_tvg;
+    }
+#endif
     /* otherwise, unsupported format */
     return type;
 }

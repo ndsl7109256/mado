@@ -16,6 +16,7 @@
 #include "apps_animation.h"
 #include "apps_calc.h"
 #include "apps_clock.h"
+#include "apps_image.h"
 #include "apps_hello.h"
 #include "apps_line.h"
 #include "apps_multi.h"
@@ -126,6 +127,12 @@ int main(void)
 #if defined(CONFIG_DEMO_ANIMATION)
     apps_animation_start(tx->screen, "Viewer", ASSET_PATH "nyancat.gif", 20,
                          20);
+#endif
+#if defined(CONFIG_DEMO_ANIMATION)
+    apps_image_start(tx->screen, "Viewer", ASSET_PATH "tiger.tvg", 20,
+                         20);
+    //apps_image_start(tx->screen, "Viewer", ASSET_PATH "pridepog.png", 20,
+    //                     20);
 #endif
 
     twin_dispatch();
