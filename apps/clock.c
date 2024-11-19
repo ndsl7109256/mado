@@ -48,7 +48,7 @@ static void apps_clock_set_transform(apps_clock_t *clock, twin_path_t *path)
     twin_path_translate(path, TWIN_FIXED_ONE + APPS_CLOCK_BORDER_WIDTH * 3,
                         TWIN_FIXED_ONE + APPS_CLOCK_BORDER_WIDTH * 3);
 
-    twin_path_rotate(path, -TWIN_ANGLE_90);
+    //twin_path_rotate(path, -TWIN_ANGLE_90);
 }
 
 static void apps_clock_hand(apps_clock_t *clock,
@@ -124,8 +124,27 @@ static void _apps_clock_face(apps_clock_t *clock)
     int m;
 
     apps_clock_set_transform(clock, path);
+	/*
+    twin_path_move(path, 0, 0);
+    twin_path_circle_(path, 0, 0, TWIN_FIXED_ONE);
+	*/
 
-    twin_path_circle(path, 0, 0, TWIN_FIXED_ONE);
+    //twin_path_arc_ellipse(path, 1, 0, TWIN_FIXED_ONE, TWIN_FIXED_HALF, 512, TWIN_FIXED_ONE, 0, -TWIN_FIXED_ONE, 0);
+    //twin_path_arc_circle(path, 1, 1, TWIN_FIXED_ONE, D(0.707108), D(0.707108), D(-0.707108), D(-0.707108));
+    //twin_path_arc_ellipse(path, 1, 0, TWIN_FIXED_ONE, TWIN_FIXED_HALF, 512,-TWIN_FIXED_ONE, 0, TWIN_FIXED_ONE, 0);
+    //twin_path_arc_circle(path, 1, 1, TWIN_FIXED_ONE, -TWIN_FIXED_ONE, 0, TWIN_FIXED_ONE, 0);
+
+    //twin_path_arc_circle(path, 1, 1, TWIN_FIXED_ONE, D(1), D(0), D(0), D(-1));
+	/*
+	twin_path_move(path,0,0);
+	twin_path_arc(path,0,0,TWIN_FIXED_ONE, TWIN_FIXED_ONE, TWIN_ANGLE_0, TWIN_ANGLE_270);
+	twin_path_draw(path,0,0);
+	*/
+	twin_path_rounded_rectangle(path, 0, 0, D(1), D(1), D(0.1), D(0.1));
+	
+
+	//twin_path_close(path);
+
 
     twin_paint_path(_apps_clock_pixmap(clock), APPS_CLOCK_BACKGROUND, path);
 

@@ -20,7 +20,8 @@
 #include "apps_hello.h"
 #include "apps_line.h"
 #include "apps_multi.h"
-#include "apps_spline.h"
+//#include "apps_spline.h"
+#include "apps_spline2.h"
 
 #define WIDTH 640
 #define HEIGHT 480
@@ -128,8 +129,8 @@ int main(void)
     apps_animation_start(tx->screen, "Viewer", ASSET_PATH "nyancat.gif", 20,
                          20);
 #endif
-#if defined(CONFIG_DEMO_ANIMATION)
-    apps_image_start(tx->screen, "Viewer", ASSET_PATH "tiger.tvg", 20,
+#if defined(CONFIG_DEMO_IMAGE)
+    apps_image_start(tx->screen, "Viewer", ASSET_PATH "flowchart.tvg", 20,
                          20);
     //apps_image_start(tx->screen, "Viewer", ASSET_PATH "pridepog.png", 20,
     //                     20);

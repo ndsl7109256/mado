@@ -795,6 +795,11 @@ void twin_path_circle(twin_path_t *path,
                       twin_fixed_t y,
                       twin_fixed_t radius);
 
+void twin_path_circle_(twin_path_t *path,
+                      twin_fixed_t x,
+                      twin_fixed_t y,
+                      twin_fixed_t radius);
+
 void twin_path_ellipse(twin_path_t *path,
                        twin_fixed_t x,
                        twin_fixed_t y,
@@ -807,6 +812,37 @@ void twin_path_arc(twin_path_t *path,
                    twin_fixed_t y_radius,
                    twin_angle_t start,
                    twin_angle_t extent);
+
+void twin_path_arc_circle(twin_path_t *path,
+                         bool large_arc,
+                         bool sweep,
+                         twin_fixed_t radius,
+						 twin_fixed_t cur_x,
+						 twin_fixed_t cur_y,
+                         twin_fixed_t target_x,
+                         twin_fixed_t target_y);
+
+/*
+void twin_path_arc_circle2(twin_path_t *path,
+                         bool large_arc,
+                         bool sweep,
+                         twin_fixed_t radius,
+						 twin_fixed_t cur_x,
+						 twin_fixed_t cur_y,
+                         twin_fixed_t target_x,
+                         twin_fixed_t target_y);
+*/
+
+void twin_path_arc_ellipse(twin_path_t *path,
+						bool large_arc,
+						bool sweep,
+						twin_fixed_t radius_x,
+						twin_fixed_t radius_y,
+						twin_fixed_t cur_x,
+						twin_fixed_t cur_y,
+						twin_fixed_t target_x,
+						twin_fixed_t target_y,
+						twin_angle_t rotation);
 
 void twin_path_rectangle(twin_path_t *path,
                          twin_fixed_t x,
@@ -1061,7 +1097,7 @@ void twin_path_curve(twin_path_t *path,
                      twin_fixed_t x3,
                      twin_fixed_t y3);
 
-void twin_path_quad_curve(twin_path_t *path,
+void twin_path_quadratic_curve(twin_path_t *path,
                      twin_fixed_t x1,
                      twin_fixed_t y1,
                      twin_fixed_t x2,
@@ -1104,6 +1140,10 @@ twin_fixed_t twin_cos(twin_angle_t a);
 twin_fixed_t twin_tan(twin_angle_t a);
 
 void twin_sincos(twin_angle_t a, twin_fixed_t *sin, twin_fixed_t *cos);
+
+twin_angle_t twin_atan2(twin_fixed_t y, twin_fixed_t x);
+
+twin_angle_t twin_acos(twin_fixed_t x);
 
 /*
  * widget.c

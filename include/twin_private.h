@@ -205,6 +205,7 @@ typedef struct _twin_spoint {
 
 struct _twin_path {
     twin_spoint_t *points;
+	twin_fixed_t cur_x, cur_y;
     int size_points;
     int npoints;
     int *sublen;

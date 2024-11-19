@@ -99,7 +99,7 @@ libapps.a_files-$(CONFIG_DEMO_HELLO) += apps/hello.c
 libapps.a_files-$(CONFIG_DEMO_CLOCK) += apps/clock.c
 libapps.a_files-$(CONFIG_DEMO_CALCULATOR) += apps/calc.c
 libapps.a_files-$(CONFIG_DEMO_LINE) += apps/line.c
-libapps.a_files-$(CONFIG_DEMO_SPLINE) += apps/spline.c
+libapps.a_files-$(CONFIG_DEMO_SPLINE) += apps/spline2.c
 libapps.a_files-$(CONFIG_DEMO_ANIMATION) += apps/animation.c
 libapps.a_files-$(CONFIG_DEMO_IMAGE) += apps/image.c
 

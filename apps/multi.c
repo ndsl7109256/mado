@@ -5,6 +5,7 @@
  */
 
 #include "apps_multi.h"
+#include "twin_private.h"
 
 #define D(x) twin_double_to_fixed(x)
 
@@ -220,6 +221,75 @@ static void apps_jelly_start(twin_screen_t *screen, int x, int y, int w, int h)
     twin_window_show(window);
 }
 
+#define APPS_CLOCK_BACKGROUND 0xff3b80ae
+
+void draw_flower(twin_path_t *path, twin_fixed_t radius) {
+    // 72度 = 2048 * (72/180) ≈ 819
+    // 36度 = 2048 * (36/180) ≈ 409
+    const twin_angle_t angle_72 = 819;
+    const twin_angle_t angle_36 = 409;
+
+	twin_fixed_t p_x = twin_fixed_mul(radius, twin_cos(-angle_36));
+	twin_fixed_t p_y = twin_fixed_mul(radius, twin_sin(-angle_36));
+
+	twin_path_move(path, p_x, p_y);
+    
+    // 計算控制點的位置
+    //for (twin_angle_t a = angle_36; a <= angle_72; a += angle_72) {
+    for (twin_angle_t a = angle_36; a <= TWIN_ANGLE_360; a += angle_72) {
+        // 計算花瓣的起點和終點
+        twin_fixed_t c_x = twin_fixed_mul(radius, twin_cos(a));
+        twin_fixed_t c_y = twin_fixed_mul(radius, twin_sin(a));
+        twin_fixed_t rx = radius;  // 橢圓的x半徑
+        twin_fixed_t ry = radius * 3;  // 橢圓的y半徑，讓花瓣更細長
+        twin_path_arc_ellipse(path, 1, 1, rx, ry, p_x, p_y, 
+                            c_x, c_y, a - angle_36);
+		p_x = c_x;
+		p_y = c_y;
+    }
+    
+    // 閉合路徑
+    twin_path_close(path);
+}
+
+
+static void apps_paint_start(twin_screen_t *screen, int x, int y, int w, int h)
+{
+    twin_window_t *window = twin_window_create(
+        screen, TWIN_ARGB32, TwinWindowApplication, x, y, w, h);
+    twin_pixmap_t *pixmap = window->pixmap;
+
+    twin_path_t *stroke = twin_path_create();
+    twin_path_t *path = twin_path_create();
+
+    twin_path_translate(path, D(200), D(200));
+    twin_path_scale(path, D(10), D(10));
+
+    twin_path_translate(stroke, D(200), D(200));
+
+    twin_fill(pixmap, 0xffffffff, TWIN_SOURCE, 0, 0, w, h);
+
+    twin_window_set_name(window, "Flower");
+
+	twin_path_move(stroke, D(-200), D(0));
+	twin_path_draw(stroke, D(200), D(0));
+
+	twin_path_move(stroke, D(0), D(200));
+	twin_path_draw(stroke, D(0), D(-200));
+
+    twin_path_set_cap_style(stroke, TwinCapProjecting);
+	twin_paint_stroke(pixmap, 0xffcc9999, stroke, D(10));
+
+
+	draw_flower(path, D(3));
+
+	twin_path_close(path);
+
+	twin_paint_path(pixmap, 0xffe2d2d2, path);
+    twin_path_destroy(stroke);
+    twin_window_show(window);
+}
+
 void apps_multi_start(twin_screen_t *screen,
                       const char *name,
                       int x,
@@ -233,4 +303,5 @@ void apps_multi_start(twin_screen_t *screen,
     apps_quickbrown_start(screen, x += 20, y += 20, w, h);
     apps_ascii_start(screen, x += 20, y += 20, w, h);
     apps_jelly_start(screen, x += 20, y += 20, w / 2, h);
+	apps_paint_start(screen, x+= 20, y += 20, w, h);
 }
