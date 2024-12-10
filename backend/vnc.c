@@ -83,8 +83,6 @@ static void _twin_vnc_put_span(twin_coord_t left,
                                  &tx->damage_region);
         pixman_region_clear(&tx->damage_region);
     }
-    aml_poll(tx->aml, 0);
-    aml_dispatch(tx->aml);
 }
 
 static void twin_vnc_get_screen_size(twin_vnc_t *tx, int *width, int *height)
@@ -96,16 +94,23 @@ static void twin_vnc_get_screen_size(twin_vnc_t *tx, int *width, int *height)
 static bool _twin_vnc_work(void *closure)
 {
     twin_screen_t *screen = SCREEN(closure);
-
-    if (twin_screen_damaged(screen))
+    twin_vnc_t *tx = PRIV(closure);
+    if (twin_screen_damaged(screen)) {
         twin_screen_update(screen);
+    }
     return true;
+}
+
+static void _twin_peer_cleanup(void *userdata)
+{
+    twin_peer_t *peer = userdata;
+    free(peer);
 }
 
 static void _twin_vnc_new_client(struct nvnc_client *client)
 {
     twin_peer_t *peer = malloc(sizeof(twin_peer_t));
-    nvnc_set_userdata(client, peer, NULL);
+    nvnc_set_userdata(client, peer, _twin_peer_cleanup);
 }
 
 static void _twin_vnc_pointer_event(struct nvnc_client *client,
@@ -262,13 +267,21 @@ static void twin_vnc_configure(twin_context_t *ctx)
     twin_screen_resize(ctx->screen, width, height);
 }
 
+static bool twin_vnc_poll(twin_context_t *ctx)
+{
+    twin_vnc_t *tx = PRIV(ctx);
+    aml_poll(tx->aml, 0);
+    aml_dispatch(tx->aml);
+    return true;
+}
+
 static void twin_vnc_exit(twin_context_t *ctx)
 {
     if (!ctx)
         return;
 
     twin_vnc_t *tx = PRIV(ctx);
-
+    nvnc_fb_unref(tx->current_fb);
     nvnc_display_unref(tx->display);
     nvnc_close(tx->server);
     aml_unref(tx->aml);
@@ -279,6 +292,7 @@ static void twin_vnc_exit(twin_context_t *ctx)
 
 const twin_backend_t g_twin_backend = {
     .init = twin_vnc_init,
+    .poll = twin_vnc_poll,
     .configure = twin_vnc_configure,
     .exit = twin_vnc_exit,
 };
